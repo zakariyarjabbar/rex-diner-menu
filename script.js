@@ -112,7 +112,10 @@ function renderMenu() {
             <span class="item-name">${item.name}</span>
             ${itemPrice}
           </span>
-          <button class="add-button" type="button" data-action="add" data-id="${item.id}" aria-label="Add ${item.name} to order">Add</button>
+          <button class="add-button" type="button" data-action="add" data-id="${item.id}" aria-label="Add ${item.name} to order">
+            <span class="add-button-icon" aria-hidden="true">+</span>
+            <span class="add-button-label">Add</span>
+          </button>
         </div>
       `;
     }).join("");
@@ -163,7 +166,7 @@ function renderCart() {
         </span>
         <span class="quantity-control" aria-label="Quantity controls for ${item.name}">
           <button type="button" data-action="decrease" data-id="${item.id}" aria-label="Decrease ${item.name} quantity">&minus;</button>
-          <span class="quantity">${item.quantity}</span>
+          <input class="quantity-input" type="number" min="1" step="1" value="${item.quantity}" data-id="${item.id}" aria-label="Quantity for ${item.name}">
           <button type="button" data-action="increase" data-id="${item.id}" aria-label="Increase ${item.name} quantity">+</button>
         </span>
         <strong class="cart-line-total">${formatCurrency(item.price * item.quantity)}</strong>
@@ -242,6 +245,31 @@ function decreaseQuantity(itemId) {
   renderCart();
 }
 
+function updateQuantity(itemId, newQuantity, shouldRender = true) {
+  const item = cart.get(itemId);
+  if (!item) return;
+
+  const quantity = Math.round(Number(newQuantity));
+  if (!Number.isFinite(quantity)) {
+    if (shouldRender) renderCart();
+    return;
+  }
+
+  if (quantity <= 0) {
+    cart.delete(itemId);
+    renderCart();
+    return;
+  }
+
+  item.quantity = quantity;
+
+  if (shouldRender) {
+    renderCart();
+  } else {
+    refreshCartTotals();
+  }
+}
+
 function calculateTotals() {
   const subtotal = Array.from(cart.values()).reduce((sum, item) => sum + item.price * item.quantity, 0);
   const discount = Math.round(subtotal * (discountPercent / 100));
@@ -254,9 +282,53 @@ function formatCurrency(amount) {
   return `$${Number(amount).toLocaleString("en-US")}`;
 }
 
+function refreshCartTotals() {
+  if (!orderCount || !subtotalAmount || !discountLabel || !discountAmount || !totalAmount || !savingsTitle) return;
+
+  const itemCount = Array.from(cart.values()).reduce((sum, item) => sum + item.quantity, 0);
+  const totals = calculateTotals();
+
+  orderCount.textContent = `${itemCount} ${itemCount === 1 ? "item" : "items"}`;
+  subtotalAmount.textContent = formatCurrency(totals.subtotal);
+  discountLabel.textContent = `Discount (${discountPercent}%)`;
+  discountAmount.textContent = totals.discount > 0 ? `-${formatCurrency(totals.discount)}` : formatCurrency(0);
+  totalAmount.textContent = formatCurrency(totals.total);
+  savingsTitle.textContent = totals.discount > 0 ? `You're saving ${discountPercent}%!` : "No discount applied.";
+}
+
+function normalizeQuantityInput(input, shouldRender = false) {
+  const itemId = input.dataset.id;
+  const item = cart.get(itemId);
+  if (!item) return;
+
+  if (input.value.trim() === "") {
+    if (shouldRender) input.value = item.quantity;
+    return;
+  }
+
+  const quantity = Math.round(Number(input.value));
+  if (!Number.isFinite(quantity)) {
+    input.value = item.quantity;
+    return;
+  }
+
+  updateQuantity(itemId, quantity, shouldRender);
+
+  const updatedItem = cart.get(itemId);
+  if (!updatedItem) return;
+
+  input.value = updatedItem.quantity;
+
+  if (!shouldRender) {
+    const cartItem = input.closest(".cart-item");
+    const lineTotal = cartItem?.querySelector(".cart-line-total");
+    if (lineTotal) lineTotal.textContent = formatCurrency(updatedItem.price * updatedItem.quantity);
+  }
+}
+
 async function copyTotal() {
   const total = calculateTotals().total;
-  const textToCopy = formatCurrency(total);
+  const textToCopy = String(Math.round(total)).replace(/\D/g, "");
 
   try {
     await navigator.clipboard.writeText(textToCopy);
@@ -344,6 +416,35 @@ document.addEventListener('DOMContentLoaded', () => {
     if (action === "remove") removeFromCart(itemId);
     if (action === "increase") increaseQuantity(itemId);
     if (action === "decrease") decreaseQuantity(itemId);
+  });
+
+  if (cartItems) cartItems.addEventListener("input", (event) => {
+    const input = event.target.closest(".quantity-input");
+    if (!input) return;
+
+    normalizeQuantityInput(input);
+  });
+
+  if (cartItems) cartItems.addEventListener("change", (event) => {
+    const input = event.target.closest(".quantity-input");
+    if (!input) return;
+
+    normalizeQuantityInput(input, true);
+  });
+
+  if (cartItems) cartItems.addEventListener("blur", (event) => {
+    const input = event.target.closest(".quantity-input");
+    if (!input) return;
+
+    normalizeQuantityInput(input, true);
+  }, true);
+
+  if (cartItems) cartItems.addEventListener("keydown", (event) => {
+    const input = event.target.closest(".quantity-input");
+    if (!input || event.key !== "Enter") return;
+
+    event.preventDefault();
+    normalizeQuantityInput(input, true);
   });
 
   if (autoDiscountBtn) autoDiscountBtn.addEventListener("click", setAutoDiscount);
