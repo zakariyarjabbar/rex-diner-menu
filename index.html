@@ -71,19 +71,77 @@
         </div>
 
         <div class="cart-actions">
-          <button class="primary-action" type="button" id="copyTotalBtn">Copy Price</button>
-          <button class="secondary-action" type="button" id="clearCartBtn">Clear Cart</button>
+          <button class="cart-action-btn cart-action-btn--primary" type="button" id="copyTotalBtn">
+            <span class="cart-action-btn__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" focusable="false">
+                <path d="M8 7h8" />
+                <path d="M8 11h8" />
+                <path d="M8 15h5" />
+                <path d="M7 4h10a2 2 0 0 1 2 2v14H5V6a2 2 0 0 1 2-2Z" />
+                <path d="M9 4.5a3 3 0 0 1 6 0" />
+              </svg>
+            </span>
+            <span class="cart-action-btn__label">Copy Price</span>
+          </button>
+          <button class="cart-action-btn cart-action-btn--secondary" type="button" id="clearCartBtn">
+            <span class="cart-action-btn__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" focusable="false">
+                <path d="M5 7h14" />
+                <path d="M9 7V5h6v2" />
+                <path d="m8 10 .7 9h6.6l.7-9" />
+                <path d="M10.5 12.5v4" />
+                <path d="M13.5 12.5v4" />
+              </svg>
+            </span>
+            <span class="cart-action-btn__label">Clear Cart</span>
+          </button>
         </div>
 
         <div class="savings-box" id="savingsBox">
           <span class="savings-icon" aria-hidden="true">&#128184;</span>
           <div>
             <p id="savingsTitle">You're saving 10%!</p>
-            <small>Thanks for ordering with Rex's Diner.</small>
+            <small>Confirm order details with customer.</small>
           </div>
         </div>
       </div>
     </aside>
   </main>
+
+  <div class="discount-modal" id="discountModal" hidden>
+    <div class="discount-modal__backdrop" data-discount-close></div>
+    <form class="discount-dialog" id="discountForm" aria-labelledby="discountModalTitle">
+      <div class="discount-dialog__header">
+        <span class="discount-dialog__icon" aria-hidden="true">%</span>
+        <div>
+          <p class="eyebrow">Custom discount</p>
+          <h2 id="discountModalTitle">Set order discount</h2>
+        </div>
+        <button class="discount-dialog__close" type="button" aria-label="Close custom discount" data-discount-close>&times;</button>
+      </div>
+
+      <label class="discount-field" for="discountInput">
+        <span>Discount percentage</span>
+        <span class="discount-input-wrap">
+          <input id="discountInput" type="number" min="0" max="100" step="1" inputmode="numeric" placeholder="10">
+          <span class="discount-stepper" aria-label="Adjust discount percentage">
+            <button type="button" data-discount-step="1" aria-label="Increase discount">
+              <svg viewBox="0 0 24 24" focusable="false"><path d="m7 14 5-5 5 5" /></svg>
+            </button>
+            <button type="button" data-discount-step="-1" aria-label="Decrease discount">
+              <svg viewBox="0 0 24 24" focusable="false"><path d="m7 10 5 5 5-5" /></svg>
+            </button>
+          </span>
+        </span>
+      </label>
+
+      <p class="discount-help" id="discountHelp">Enter a whole number from 0 to 100.</p>
+
+      <div class="discount-dialog__actions">
+        <button class="discount-cancel" type="button" data-discount-close>Cancel</button>
+        <button class="discount-apply" type="submit">Apply Discount</button>
+      </div>
+    </form>
+  </div>
 </body>
 </html>

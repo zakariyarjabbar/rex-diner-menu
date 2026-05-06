@@ -89,7 +89,7 @@ const cart = new Map();
 let discountPercent = 0;
 let discountMode = "none";
 
-let menuGrid, cartItems, orderCount, subtotalAmount, discountLabel, discountAmount, totalAmount, savingsTitle, autoDiscountBtn, customDiscountBtn, copyTotalBtn, clearCartBtn;
+let menuGrid, cartItems, orderCount, subtotalAmount, discountLabel, discountAmount, totalAmount, savingsTitle, autoDiscountBtn, customDiscountBtn, copyTotalBtn, clearCartBtn, discountModal, discountForm, discountInput, discountHelp;
 
 function renderMenu() {
   if (!menuGrid) return;
@@ -342,10 +342,11 @@ async function copyTotal() {
   }
 
   if (copyTotalBtn) {
+    const copyTotalLabel = copyTotalBtn.querySelector(".cart-action-btn__label");
     copyTotalBtn.classList.add("is-copied");
-    copyTotalBtn.textContent = "Copied!";
+    if (copyTotalLabel) copyTotalLabel.textContent = "Copied!";
     window.setTimeout(() => {
-      copyTotalBtn.textContent = "Copy Price";
+      if (copyTotalLabel) copyTotalLabel.textContent = "Copy Price";
       copyTotalBtn.classList.remove("is-copied");
     }, 1500);
   }
@@ -369,18 +370,54 @@ function setAutoDiscount() {
 }
 
 function setCustomDiscount() {
-  const response = window.prompt("Enter a discount percentage from 0 to 100:");
-  if (response === null) return;
+  openDiscountModal();
+}
 
-  const value = Number(response.trim());
+function openDiscountModal() {
+  if (!discountModal || !discountInput || !discountHelp) return;
+
+  discountInput.value = discountMode === "custom" ? discountPercent : "";
+  discountHelp.textContent = "Enter a whole number from 0 to 100.";
+  discountHelp.classList.remove("is-error");
+  discountModal.hidden = false;
+  discountInput.focus();
+  discountInput.select();
+}
+
+function closeDiscountModal() {
+  if (!discountModal) return;
+
+  discountModal.hidden = true;
+}
+
+function applyCustomDiscount() {
+  if (!discountInput || !discountHelp) return;
+
+  const value = Number(discountInput.value.trim());
   if (!Number.isFinite(value) || value < 0 || value > 100) {
-    window.alert("Please enter a valid discount percentage from 0 to 100.");
+    discountHelp.textContent = "Please enter a whole number from 0 to 100.";
+    discountHelp.classList.add("is-error");
+    discountInput.focus();
     return;
   }
 
   discountMode = "custom";
-  discountPercent = Math.round(value * 100) / 100;
+  discountPercent = Math.round(value);
+  closeDiscountModal();
   renderCart();
+}
+
+function stepDiscountInput(amount) {
+  if (!discountInput || !discountHelp) return;
+
+  const currentValue = Number(discountInput.value);
+  const safeValue = Number.isFinite(currentValue) ? currentValue : 0;
+  const nextValue = Math.min(Math.max(Math.round(safeValue) + amount, 0), 100);
+
+  discountInput.value = nextValue;
+  discountHelp.textContent = "Enter a whole number from 0 to 100.";
+  discountHelp.classList.remove("is-error");
+  discountInput.focus();
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -396,6 +433,10 @@ document.addEventListener('DOMContentLoaded', () => {
   customDiscountBtn = document.getElementById("customDiscountBtn");
   copyTotalBtn = document.getElementById("copyTotalBtn");
   clearCartBtn = document.getElementById("clearCartBtn");
+  discountModal = document.getElementById("discountModal");
+  discountForm = document.getElementById("discountForm");
+  discountInput = document.getElementById("discountInput");
+  discountHelp = document.getElementById("discountHelp");
 
   if (menuGrid) menuGrid.addEventListener("click", (event) => {
     const button = event.target.closest("button[data-action]");
@@ -451,6 +492,20 @@ document.addEventListener('DOMContentLoaded', () => {
   if (customDiscountBtn) customDiscountBtn.addEventListener("click", setCustomDiscount);
   if (copyTotalBtn) copyTotalBtn.addEventListener("click", copyTotal);
   if (clearCartBtn) clearCartBtn.addEventListener("click", clearCart);
+  if (discountForm) discountForm.addEventListener("submit", (event) => {
+    event.preventDefault();
+    applyCustomDiscount();
+  });
+  if (discountModal) discountModal.addEventListener("click", (event) => {
+    if (event.target.closest("[data-discount-close]")) closeDiscountModal();
+    const stepButton = event.target.closest("[data-discount-step]");
+    if (stepButton) stepDiscountInput(Number(stepButton.dataset.discountStep));
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && discountModal && !discountModal.hidden) {
+      closeDiscountModal();
+    }
+  });
 
   renderMenu();
   renderCart();
