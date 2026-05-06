@@ -1,100 +1,89 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dino Diner Cashier</title>
-  <link rel="stylesheet" href="styles.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rex's Diner Ordering</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="script.js" defer></script>
 </head>
 <body>
-  <div class="container">
-    <div class="logo-container" style="text-align:center; margin-bottom:20px;">
-      <img src="image.png" alt="Dino Diner Logo" width="961" height="255" style="max-width:100%; height:auto;">
+  <header class="site-header">
+    <a class="logo" href="#" aria-label="Rex's Diner home">
+      <span class="logo-rex">Rex's</span>
+      <span class="logo-diner">Diner</span>
+    </a>
+  </header>
+
+  <main class="page-shell">
+    <div class="main-content">
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero-copy">
+          <p class="eyebrow">Welcome back!</p>
+          <h1 id="hero-title">Good food. Good times.<br>Only at <span>Rex's.</span></h1>
+          <div class="hero-actions" aria-label="Discount controls">
+            <button class="outline-action" type="button" id="autoDiscountBtn">
+              <span class="discount-icon" aria-hidden="true">%</span>
+              Auto 10% Discount
+            </button>
+            <button class="outline-action" type="button" id="customDiscountBtn">
+              <span class="discount-icon" aria-hidden="true">&#9998;</span>
+              Custom Discount
+            </button>
+          </div>
+        </div>
+        <div class="hero-art fallback-frame" data-fallback="&#127828;" aria-hidden="true">
+          <img src="images/hero-burger.png" alt="" data-fallback-image>
+        </div>
+      </section>
+
+      <section class="menu-section" aria-labelledby="menu-title">
+        <div class="section-heading">
+          <p class="eyebrow">Diner menu</p>
+          <h2 id="menu-title">Choose your cravings</h2>
+        </div>
+        <div class="menu-grid" id="menuGrid"></div>
+      </section>
     </div>
 
-    <!-- Discount Section -->
-    <div class="discount-toggle">
-      <div class="toggle-group">
-        <label class="toggle">
-          <input type="checkbox" id="auto-discount" />
-          <span class="slider"></span>
-          Auto 10% Discount
-        </label>
-        <label class="toggle">
-          <input type="checkbox" id="custom-discount-toggle" />
-          <span class="slider"></span>
-          Custom Discount
-        </label>
-      </div>
-      <div id="custom-discount-container" class="hidden">
-        <label for="custom-discount">Custom Discount (%):</label>
-        <input type="number" id="custom-discount" min="0" max="100" value="0" />
-      </div>
-    </div>
+    <aside class="order-panel" aria-labelledby="order-title">
+      <div class="order-card">
+        <div class="order-header">
+          <h2 id="order-title"><span aria-hidden="true">&#128722;</span> Your Order</h2>
+          <span class="order-count" id="orderCount">0 items</span>
+        </div>
 
-    <!-- Menu Sections -->
-    <div class="menu-sections">
-      <div class="menu-section" id="drinks">
-        <h2>Drinks - $150</h2>
-        <div class="menu-item" data-name="Lemonaid" data-key="drinks">Lemonaid <button class="add-to-cart">Add</button></div>
-        <div class="menu-item" data-name="Coffee" data-key="drinks">Coffee <button class="add-to-cart">Add</button></div>
-        <div class="menu-item" data-name="Iced Tea" data-key="drinks">Iced Tea <button class="add-to-cart">Add</button></div>
-        <div class="menu-item" data-name="Milkshake" data-key="drinks">Milkshake <button class="add-to-cart">Add</button></div>
-        <div class="menu-item" data-name="Soda" data-key="drinks">Soda <button class="add-to-cart">Add</button></div>
+        <div class="cart-body" id="cartItems" aria-live="polite"></div>
+
+        <div class="totals" aria-label="Order totals">
+          <div class="total-row">
+            <span>Subtotal</span>
+            <strong id="subtotalAmount">$0</strong>
+          </div>
+          <div class="total-row discount-row">
+            <span id="discountLabel">Discount (10%)</span>
+            <strong id="discountAmount">-$0</strong>
+          </div>
+          <div class="total-row grand-total">
+            <span>Total</span>
+            <strong id="totalAmount">$0</strong>
+          </div>
+        </div>
+
+        <div class="cart-actions">
+          <button class="primary-action" type="button" id="copyTotalBtn">Copy Price</button>
+          <button class="secondary-action" type="button" id="clearCartBtn">Clear Cart</button>
+        </div>
+
+        <div class="savings-box" id="savingsBox">
+          <span class="savings-icon" aria-hidden="true">&#128184;</span>
+          <div>
+            <p id="savingsTitle">You're saving 10%!</p>
+            <small>Thanks for ordering with Rex's Diner.</small>
+          </div>
+        </div>
       </div>
-
-      <div class="menu-section" id="desserts">
-        <h2>Desserts - $250</h2>
-        <div class="menu-item" data-name="Applesaurus Pie" data-key="desserts">Applesaurus Pie <button class="add-to-cart">Add</button></div>
-        <div class="menu-item" data-name="Meteor Muffin" data-key="desserts">Meteor Muffin <button class="add-to-cart">Add</button></div>
-        <div class="menu-item" data-name="Dino Dough" data-key="desserts">Dino Dough <button class="add-to-cart">Add</button></div>
-        <div class="menu-item" data-name="Sundae" data-key="desserts">Sundae <button class="add-to-cart">Add</button></div>
-        <div class="menu-item" data-name="Waffle Cone" data-key="desserts">Waffle Cone <button class="add-to-cart">Add</button></div>
-        <div class="menu-item" data-name="Veloci Treat Cookie" data-key="desserts">Veloci Treat Cookie <button class="add-to-cart">Add</button></div>
-      </div>
-
-      <div class="menu-section" id="rex-picks">
-        <h2>Rex's Picks - $300</h2>
-        <div class="menu-item" data-name="Rex's Original" data-key="rexPicks">Rex's Original <button class="add-to-cart">Add</button></div>
-        <div class="menu-item" data-name="BLT" data-key="rexPicks">BLT <button class="add-to-cart">Add</button></div>
-        <div class="menu-item" data-name="Rex's Double" data-key="rexPicks">Rex's Double <button class="add-to-cart">Add</button></div>
-        <div class="menu-item" data-name="Jurassic Patty" data-key="rexPicks">Jurassic Patty <button class="add-to-cart">Add</button></div>
-        <div class="menu-item" data-name="Stego Stacker" data-key="rexPicks">Stego Stacker <button class="add-to-cart">Add</button></div>
-        <div class="menu-item" data-name="T-Rex Taco" data-key="rexPicks">T-Rex Taco <button class="add-to-cart">Add</button></div>
-        <div class="menu-item" data-name="Raptor Wrap" data-key="rexPicks">Raptor Wrap <button class="add-to-cart">Add</button></div>
-        <div class="menu-item" data-name="Tricera Chick" data-key="rexPicks">Tricera Chick <button class="add-to-cart">Add</button></div>
-        <div class="menu-item" data-name="Dino Nuggies" data-key="rexPicks">Dino Nuggies <button class="add-to-cart">Add</button></div>
-      </div>
-
-      <div class="menu-section" id="sides">
-        <h2>Sides - $100</h2>
-        <div class="menu-item" data-name="Fries" data-key="sides">Fries <button class="add-to-cart">Add</button></div>
-        <div class="menu-item" data-name="Onion Rings" data-key="sides">Onion Rings <button class="add-to-cart">Add</button></div>
-      </div>
-
-      <div class="menu-section" id="favorites">
-        <h2>Customer Favorite</h2>
-        <div class="menu-item" data-name="Dino Nuggies and Milkshake" data-key="favorites">Dino Nuggies and Milkshake - $425 <button class="add-to-cart">Add</button></div>
-        <div class="menu-item" data-name="Dino Nuggies" data-key="favorites">Dino Nuggies - $300 <button class="add-to-cart">Add</button></div>
-        <div class="menu-item" data-name="Milkshake" data-key="favorites">Milkshake - $150 <button class="add-to-cart">Add</button></div>
-      </div>
-    </div>
-
-    <!-- Cart Section -->
-    <div class="cart-section">
-      <h2>Cart</h2>
-      <ul id="cart-items"></ul>
-      <div id="total-container">
-        <span id="total">Total: $0.00</span>
-        <button id="copy-total-btn">Copy</button>
-      </div>
-      <button class="reload-button" onclick="window.location.reload()">Reload Page</button>
-    </div>
-  </div>
-
-  <!-- Dark/Light Mode Toggle Button -->
-  <button id="theme-toggle-btn">🌙</button>
-
-  <script src="script.js"></script>
+    </aside>
+  </main>
 </body>
 </html>
