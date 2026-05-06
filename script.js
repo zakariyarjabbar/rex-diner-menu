@@ -89,261 +89,47 @@ const cart = new Map();
 let discountPercent = 0;
 let discountMode = "none";
 
-const menuGrid = document.getElementById("menuGrid");
-const cartItems = document.getElementById("cartItems");
-const orderCount = document.getElementById("orderCount");
-const subtotalAmount = document.getElementById("subtotalAmount");
-const discountLabel = document.getElementById("discountLabel");
-const discountAmount = document.getElementById("discountAmount");
-const totalAmount = document.getElementById("totalAmount");
-const savingsTitle = document.getElementById("savingsTitle");
-const autoDiscountBtn = document.getElementById("autoDiscountBtn");
-const customDiscountBtn = document.getElementById("customDiscountBtn");
-const copyTotalBtn = document.getElementById("copyTotalBtn");
-const clearCartBtn = document.getElementById("clearCartBtn");
+document.addEventListener('DOMContentLoaded', () => {
+  const menuGrid = document.getElementById("menuGrid");
+  const cartItems = document.getElementById("cartItems");
+  const orderCount = document.getElementById("orderCount");
+  const subtotalAmount = document.getElementById("subtotalAmount");
+  const discountLabel = document.getElementById("discountLabel");
+  const discountAmount = document.getElementById("discountAmount");
+  const totalAmount = document.getElementById("totalAmount");
+  const savingsTitle = document.getElementById("savingsTitle");
+  const autoDiscountBtn = document.getElementById("autoDiscountBtn");
+  const customDiscountBtn = document.getElementById("customDiscountBtn");
+  const copyTotalBtn = document.getElementById("copyTotalBtn");
+  const clearCartBtn = document.getElementById("clearCartBtn");
 
-function renderMenu() {
-  menuGrid.innerHTML = menuCategories.map((category) => {
-    const priceBadge = category.priceBadge
-      ? `<span class="price-badge">${formatCurrency(category.priceBadge)}</span>`
-      : "";
+  renderMenu();
+  renderCart();
+  setupImageFallbacks(document);
 
-    const items = category.items.map((item) => {
-      const itemPrice = category.showItemPrices
-        ? `<small class="item-price">${formatCurrency(item.price)}</small>`
-        : "";
+  menuGrid.addEventListener("click", (event) => {
+    const button = event.target.closest("button[data-action]");
+    if (!button) return;
 
-      return `
-        <div class="menu-item">
-          <span class="thumb fallback-frame" data-fallback="${item.fallback}">
-            <img src="${item.image}" alt="${item.name}" data-fallback-image>
-          </span>
-          <span class="item-meta">
-            <span class="item-name">${item.name}</span>
-            ${itemPrice}
-          </span>
-          <button class="add-button" type="button" data-action="add" data-id="${item.id}" aria-label="Add ${item.name} to order">Add</button>
-        </div>
-      `;
-    }).join("");
-
-    return `
-      <article class="menu-card ${category.wide ? "wide" : ""}">
-        <header class="menu-card-header">
-          <span class="category-icon fallback-frame" data-fallback="" aria-hidden="true">
-            <img src="${category.icon}" alt="" data-fallback-image>
-          </span>
-          <h3 class="category-title">${category.title}</h3>
-          ${priceBadge}
-        </header>
-        <div class="menu-items">
-          ${items}
-        </div>
-      </article>
-    `;
-  }).join("");
-
-  setupImageFallbacks(menuGrid);
-}
-
-function renderCart() {
-  const items = Array.from(cart.values());
-  const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
-  const totals = calculateTotals();
-
-  orderCount.textContent = `${itemCount} ${itemCount === 1 ? "item" : "items"}`;
-
-  if (items.length === 0) {
-    cartItems.innerHTML = `
-      <div class="empty-cart">
-        <span class="empty-cart-icon" aria-hidden="true">&#128722;</span>
-        <span>Your cart is empty.</span>
-      </div>
-    `;
-  } else {
-    cartItems.innerHTML = items.map((item) => `
-      <div class="cart-item">
-        <span class="thumb fallback-frame" data-fallback="${item.fallback}">
-          <img src="${item.image}" alt="${item.name}" data-fallback-image>
-        </span>
-        <span class="item-meta">
-          <span class="cart-name">${item.name}</span>
-          <span class="cart-unit">${formatCurrency(item.price)} each</span>
-        </span>
-        <span class="quantity-control" aria-label="Quantity controls for ${item.name}">
-          <button type="button" data-action="decrease" data-id="${item.id}" aria-label="Decrease ${item.name} quantity">&minus;</button>
-          <span class="quantity">${item.quantity}</span>
-          <button type="button" data-action="increase" data-id="${item.id}" aria-label="Increase ${item.name} quantity">+</button>
-        </span>
-        <strong class="cart-line-total">${formatCurrency(item.price * item.quantity)}</strong>
-        <button class="remove-button" type="button" data-action="remove" data-id="${item.id}" aria-label="Remove ${item.name} from order">&times;</button>
-      </div>
-    `).join("");
-  }
-
-  subtotalAmount.textContent = formatCurrency(totals.subtotal);
-  discountLabel.textContent = `Discount (${discountPercent}%)`;
-  discountAmount.textContent = totals.discount > 0 ? `-${formatCurrency(totals.discount)}` : formatCurrency(0);
-  totalAmount.textContent = formatCurrency(totals.total);
-  savingsTitle.textContent = totals.discount > 0 ? `You're saving ${discountPercent}%!` : "No discount applied.";
-
-  autoDiscountBtn.classList.toggle("is-active", discountMode === "auto" && discountPercent === 10);
-  customDiscountBtn.classList.toggle("is-active", discountMode === "custom");
-
-  setupImageFallbacks(cartItems);
-}
-
-function setupImageFallbacks(scope = document) {
-  if (!scope.querySelectorAll) return;
-
-  scope.querySelectorAll("[data-fallback-image]").forEach((image) => {
-    const frame = image.closest(".fallback-frame");
-    const hideBrokenImage = () => {
-      if (!frame) return;
-      frame.classList.add("is-fallback");
-      image.hidden = true;
-    };
-
-    image.addEventListener("error", hideBrokenImage, { once: true });
-
-    if (image.complete && image.naturalWidth === 0) {
-      hideBrokenImage();
+    if (button.dataset.action === "add") {
+      addToCart(button.dataset.id);
     }
   });
-}
 
-function addToCart(itemId) {
-  const item = itemLookup.get(itemId);
-  if (!item) return;
+  cartItems.addEventListener("click", (event) => {
+    const button = event.target.closest("button[data-action]");
+    if (!button) return;
 
-  const existing = cart.get(itemId);
-  if (existing) {
-    existing.quantity += 1;
-  } else {
-    cart.set(itemId, { ...item, quantity: 1 });
-  }
+    const itemId = button.dataset.id;
+    const action = button.dataset.action;
 
-  renderCart();
-}
+    if (action === "remove") removeFromCart(itemId);
+    if (action === "increase") increaseQuantity(itemId);
+    if (action === "decrease") decreaseQuantity(itemId);
+  });
 
-function removeFromCart(itemId) {
-  cart.delete(itemId);
-  renderCart();
-}
-
-function increaseQuantity(itemId) {
-  const item = cart.get(itemId);
-  if (!item) return;
-
-  item.quantity += 1;
-  renderCart();
-}
-
-function decreaseQuantity(itemId) {
-  const item = cart.get(itemId);
-  if (!item) return;
-
-  item.quantity -= 1;
-  if (item.quantity <= 0) {
-    cart.delete(itemId);
-  }
-
-  renderCart();
-}
-
-function calculateTotals() {
-  const subtotal = Array.from(cart.values()).reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const discount = Math.round(subtotal * (discountPercent / 100));
-  const total = Math.max(subtotal - discount, 0);
-
-  return { subtotal, discount, total };
-}
-
-function formatCurrency(amount) {
-  return `$${Number(amount).toLocaleString("en-US")}`;
-}
-
-async function copyTotal() {
-  const total = calculateTotals().total;
-  const textToCopy = formatCurrency(total);
-
-  try {
-    await navigator.clipboard.writeText(textToCopy);
-  } catch (error) {
-    const temporaryInput = document.createElement("input");
-    temporaryInput.value = textToCopy;
-    document.body.appendChild(temporaryInput);
-    temporaryInput.select();
-    document.execCommand("copy");
-    temporaryInput.remove();
-  }
-
-  copyTotalBtn.classList.add("is-copied");
-  copyTotalBtn.textContent = "Copied!";
-  window.setTimeout(() => {
-    copyTotalBtn.textContent = "Copy Price";
-    copyTotalBtn.classList.remove("is-copied");
-  }, 1500);
-}
-
-function clearCart() {
-  cart.clear();
-  renderCart();
-}
-
-function setAutoDiscount() {
-  if (discountMode === "auto" && discountPercent === 10) {
-    discountMode = "none";
-    discountPercent = 0;
-  } else {
-    discountMode = "auto";
-    discountPercent = 10;
-  }
-
-  renderCart();
-}
-
-function setCustomDiscount() {
-  const response = window.prompt("Enter a discount percentage from 0 to 100:");
-  if (response === null) return;
-
-  const value = Number(response.trim());
-  if (!Number.isFinite(value) || value < 0 || value > 100) {
-    window.alert("Please enter a valid discount percentage from 0 to 100.");
-    return;
-  }
-
-  discountMode = "custom";
-  discountPercent = Math.round(value * 100) / 100;
-  renderCart();
-}
-
-menuGrid.addEventListener("click", (event) => {
-  const button = event.target.closest("button[data-action]");
-  if (!button) return;
-
-  if (button.dataset.action === "add") {
-    addToCart(button.dataset.id);
-  }
+  autoDiscountBtn.addEventListener("click", setAutoDiscount);
+  customDiscountBtn.addEventListener("click", setCustomDiscount);
+  copyTotalBtn.addEventListener("click", copyTotal);
+  clearCartBtn.addEventListener("click", clearCart);
 });
-
-cartItems.addEventListener("click", (event) => {
-  const button = event.target.closest("button[data-action]");
-  if (!button) return;
-
-  const itemId = button.dataset.id;
-  const action = button.dataset.action;
-
-  if (action === "remove") removeFromCart(itemId);
-  if (action === "increase") increaseQuantity(itemId);
-  if (action === "decrease") decreaseQuantity(itemId);
-});
-
-autoDiscountBtn.addEventListener("click", setAutoDiscount);
-customDiscountBtn.addEventListener("click", setCustomDiscount);
-copyTotalBtn.addEventListener("click", copyTotal);
-clearCartBtn.addEventListener("click", clearCart);
-
-renderMenu();
-renderCart();
-setupImageFallbacks(document);
